@@ -16,11 +16,12 @@ dependencies = [
     "python-dotenv",
     "tensorflow>=2.21.0",
     "seaborn>=0.13.2",
+    "openai>=2.46.0",
 ]
 
 # Deferred to build-time (added with `uv add` when the owning notebook is built):
 #   tensorflow  -> notebook 03 (feed-forward neural network, Keras)
-#   openai      -> notebook 05 (OpenAI-compatible LLM-as-judge client)
+# openai was added with notebook 05 (OpenAI-compatible LLM-as-judge client).
 # Kept out of the initial lockfile so the heaviest / most platform-fragile
 # dependencies do not land before the code that needs them.
 

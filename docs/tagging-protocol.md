@@ -53,3 +53,5 @@ Pilot inputs differ in two honest ways: the pilot runs on the golden set (which 
 ## Outputs
 
 `tag` (+ optional `tag_alt`) columns joined to the disagreement rows → the taxonomy distribution table, per-category LR/NN win rates, and the judge-accuracy-by-category figure. Protocol text becomes a paper appendix; deviations discovered during the pilot amend this document, with the change noted, before the real run.
+
+**Pre-registered baseline for the judge (recorded 2026-07-24, before any prediction file existed).** On a disagreement set exactly one of the two models is correct on every row, so their accuracies sum to 100% there. The judge is therefore measured against *"always side with the better model"* — `max(acc_LR, acc_NN)` on that same set — not against a coin flip. It earns its place in the paper only by beating that number, and the outcome is reported either way. Full reasoning in [`judge-dev-log.md`](judge-dev-log.md) under 2026-07-24.

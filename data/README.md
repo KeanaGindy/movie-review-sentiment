@@ -18,8 +18,9 @@ Feature matrices are **not stored** — every notebook derives them on the fly f
 - Source: Hugging Face — `stanfordnlp/imdb` (https://huggingface.co/datasets/stanfordnlp/imdb)
 - Origin: Maas, A. L., Daly, R. E., Pham, P. T., Huang, D., Ng, A. Y., & Potts, C. (2011). *Learning word vectors for sentiment analysis.* ACL.
 - Size: 50,000 labeled reviews (25,000 train / 25,000 test), balanced 50/50.
-- License: see the dataset card — `[VERIFY]` and record the exact license + access date here before submission.
-- Access date: `[record on first download]`
+- License: the Hugging Face dataset card declares `license: other` and names no specific license text (verified against the cached card, revision `e628166`, 2026-07-24). Upstream distribution is Stanford's page at http://ai.stanford.edu/~amaas/data/sentiment/, which asks that users cite Maas et al. (2011). `[VERIFY]` the upstream page's exact terms before submission if the paper needs to name a license.
+- Access date: first accessed 2026-07-20 (golden-set curation for the judge lane); pipeline download re-verified 2026-07-24 when notebook 00 landed.
+- Note on corpus integrity: 123 review texts appear in **both** the Hugging Face train and test splits, and there are exact-duplicate rows within each split. This is a property of the published benchmark, not of our sampling. Quantified in the paper's limitations rather than silently repaired — the split spec is frozen.
 
 ## Data budget
 

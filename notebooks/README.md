@@ -2,7 +2,9 @@
 
 The project is built as a **linear sequence of notebooks that hand off artifacts on disk.** Each notebook reads the previous step's saved outputs and writes the inputs for the next. The files on disk are the contract between people — nothing is passed in memory. Run them **in order, 00 → 05.**
 
-Notebooks do not exist yet; they are designed and built together, one at a time. This README is the spec each one implements.
+Notebooks are built one at a time by their owners, so at any moment some of the six exist and some do not — run `ls` here and `gh pr list` to see which. This README is the spec each one implements, and it stays the contract whether or not the file exists yet.
+
+**Output naming:** each notebook prefixes its outputs with its own number (`01-eda_*`, `05-judge_*`), so `outputs/` sorts in pipeline order and every file's owner is obvious.
 
 ## Why it is built this way
 
@@ -33,11 +35,11 @@ Two canonical artifacts anchor everything: **`data/processed/splits.parquet`** (
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
 | **00** | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`<br>`artifacts/tfidf_vectorizer.joblib` |
-| **01** | `eda` | `splits.parquet` | `outputs/figures/eda_*.png`<br>`outputs/tables/eda_*.csv` |
+| **01** | `eda` | `splits.parquet` | `outputs/figures/01-eda_*.png`<br>`outputs/tables/01-eda_*.csv` |
 | **02** | `logistic_regression` | `load_features("fit")`, `load_features("val")` | `artifacts/logreg.joblib`<br>`outputs/predictions/lr_val.parquet`<br>`outputs/tables/lr_top_coefficients.csv`<br>`outputs/tables/lr_topk_results.csv` (k = 50/100/500) |
 | **03** | `neural_network` | `load_features("fit")`, `load_features("val")` | `artifacts/nn_model.keras`<br>`outputs/predictions/nn_val.parquet`<br>`outputs/tables/nn_training_history.csv` |
 | **04** | `evaluation` | val predictions; saved models; `load_features("test")` **on the final run only** | `outputs/predictions/test_predictions.parquet` (long format: adds a `model` column)<br>`outputs/tables/metrics_comparison.csv`<br>`outputs/figures/{roc,confusion,comparison}_*.png` |
-| **05** | `divergence_judge` | prediction files + `splits.parquet` (for text) | `outputs/tables/adjudication.csv`<br>`outputs/tables/disagreement_taxonomy.csv`<br>`outputs/figures/judge_*.png` |
+| **05** | `divergence_judge` | prediction files + `splits.parquet` (for text) + `data/golden/golden_set.csv` | `outputs/tables/05-judge_*.csv`<br>`outputs/figures/05-judge_*.png` |
 
 Notes:
 - **`fit` vs `val` vs `test`.** `fit` (10,000) trains the models; `val` (5,000) tunes them; `test` (25,000) is scored exactly once. Notebooks 02 and 03 never load the test split — they end at a frozen model artifact plus validation predictions.

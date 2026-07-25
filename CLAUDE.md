@@ -8,9 +8,19 @@ Movie-review sentiment classification (IMDB, positive/negative), built to **empi
 
 It is a **3-person, 7-week course team project.** The design goal that shapes everything is a *fair* two-model comparison whose every paper number regenerates from a clean clone.
 
-## Current state: scaffold
+## Current state
 
-The notebooks and `src/shared.py` **do not exist yet** — this repo is currently READMEs, config, and empty (`.gitkeep`) data/output folders. The folder READMEs are *specs*, not descriptions of existing code. Notebooks are built one at a time, in order, by their owners. Do not assume `shared.py`, any `.ipynb`, or any artifact exists — check first.
+`src/shared.py` and notebook `00_core` are **merged and live**: running 00 regenerates `data/processed/splits.parquet` and `artifacts/tfidf_vectorizer.joblib` in seconds. The remaining notebooks are built one at a time by their owners, so at any moment some exist and some do not.
+
+**Check rather than assume** — this paragraph ages faster than the repo:
+
+```bash
+ls notebooks/            # which notebooks exist here and now
+gh pr list               # what is in flight and who owns it
+git log --oneline -10    # what landed recently
+```
+
+Artifacts and data are gitignored, so a fresh clone has **none** of them until someone runs 00. Anything under `data/processed/` or `artifacts/` is regenerable and never authoritative in git; the reproducible record lives in `outputs/` (committed).
 
 ## Environment & commands
 
@@ -42,11 +52,11 @@ The build is a **linear pipeline of six notebooks that hand off artifacts on dis
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
 | 00 | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`, `artifacts/tfidf_vectorizer.joblib` |
-| 01 | `eda` | `splits.parquet` | `outputs/figures/eda_*.png`, `outputs/tables/eda_*.csv` |
+| 01 | `eda` | `splits.parquet` | `outputs/figures/01-eda_*.png`, `outputs/tables/01-eda_*.csv` |
 | 02 | `logistic_regression` | `load_features("fit"/"val")` | `artifacts/logreg.joblib`, `outputs/predictions/lr_val.parquet`, LR coefficient + top-k tables |
 | 03 | `neural_network` | `load_features("fit"/"val")` | `artifacts/nn_model.keras`, `outputs/predictions/nn_val.parquet`, training history |
 | 04 | `evaluation` | val predictions + saved models; `load_features("test")` **on the final run only** | `outputs/predictions/test_predictions.parquet` (long, adds `model` col), metrics table, comparison figures |
-| 05 | `divergence_judge` | prediction files + `splits.parquet` | adjudication table, disagreement taxonomy, judge figures |
+| 05 | `divergence_judge` | prediction files + `splits.parquet` + `data/golden/` | `outputs/tables/05-judge_*.csv`, `outputs/figures/05-judge_*.png` |
 
 **Two canonical artifacts anchor everything:** `data/processed/splits.parquet` (`id, text, label, split∈{fit,val,test}`) and `artifacts/tfidf_vectorizer.joblib`. Feature matrices are **derived, never stored** — every notebook calls `shared.load_features(split)`, which loads both and transforms on the fly (seconds), so matrices can't go stale against the vectorizer.
 
@@ -83,6 +93,8 @@ It holds only settled, communal pieces: `SEED`, `PATHS` (never hard-code a path)
 - Every notebook: title/purpose + owner + its reads/writes line up top; imports (shared foundation first); the work; an explicit "write handoff artifacts" cell at the end.
 - **Kernel → Restart & Run All before committing**, so committed outputs match committed code. Notebooks must run clean top-to-bottom.
 - Relative paths only (via `PATHS` from `shared.py`). Clear noisy outputs before committing; keep the figures the paper references.
+- **Name outputs with the writing notebook's number:** `01-eda_*`, `05-judge_*`. The prefix makes `outputs/` sort in pipeline order and makes every file's owner obvious at a glance. Print a manifest of what the notebook wrote as its last cell.
+- **This is a public repo.** Never let an absolute path, a local username, or a stderr warning carrying either one into a committed output cell — print paths via `.relative_to(PATHS["repo_root"])`.
 - **Run the `notebook-reviewer` subagent before committing any notebook** (`.claude/agents/notebook-reviewer.md`) and clear its Blockers. It checks the invariants above, reproducibility, PEP 8, and — critical in a public repo — that no secret leaked into a cell or output.
 
 ## Git workflow (PRs; sized for 3 people / 7 weeks)

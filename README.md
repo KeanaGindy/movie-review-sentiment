@@ -95,7 +95,7 @@ flowchart LR
 | 02 | `logistic_regression` | T2 | fit + val features | LR model, val predictions, coefficients, top-k results |
 | 03 | `neural_network` | T1 | fit + val features | NN model, val predictions, training history |
 | 04 | `evaluation` | T2 | val predictions + saved models; test features on the final run only | test predictions (both models, one file), metrics table, comparison figures |
-| 05 | `divergence_judge` | T3 | predictions + splits (derives the disagreement set) | hard-case taxonomy, LLM adjudication table |
+| 05 | `divergence_judge` | T3 | predictions + splits (derives the disagreement set) + the hand-curated golden set | hard-case taxonomy, LLM adjudication table |
 
 Ownership is a 2/2/2 split: every member has one early-phase notebook (00/01/02) and one late-phase notebook (03/04/05), so contribution runs through the whole build. Lanes, calendar, and the report/presentation split live in [`docs/workload-plan.md`](docs/workload-plan.md).
 

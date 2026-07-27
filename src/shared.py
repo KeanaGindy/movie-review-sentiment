@@ -23,6 +23,7 @@ API examples:
 """
 from __future__ import annotations
 
+import hashlib
 import re
 from pathlib import Path
 from typing import Tuple, Optional, Dict, Any, Iterable
@@ -69,6 +70,30 @@ SPLIT_SIZES: Dict[str, int] = {
     'val': 5_000,
     'test': 25_000,
 }
+
+# Expected split fingerprints, recorded when notebook 00 was ratified. The
+# artifacts are gitignored and each machine regenerates them, while ids are
+# positional (fit-000123), so two machines producing different samples would
+# still produce colliding ids that point at different reviews. Notebook 00
+# asserts against these so that divergence is loud instead of silent.
+SPLIT_FINGERPRINTS: Dict[str, str] = {
+    'fit': 'a119c174af55823c',
+    'val': 'f10ba2466b84170b',
+    'test': '56278a6aa6fbfb16',
+}
+
+
+def fingerprint_texts(texts: Iterable[str]) -> str:
+    """Order-sensitive digest of a split's texts (first 16 hex of SHA-256).
+
+    Order matters by design: ids are assigned positionally, so a same-set,
+    different-order split would silently remap every id.
+    """
+    h = hashlib.sha256()
+    for t in texts:
+        h.update(str(t).encode('utf-8'))
+    return h.hexdigest()[:16]
+
 
 # Prediction schema used across the pipeline
 PREDICTION_SCHEMA = ['id', 'y_true', 'y_pred', 'y_proba_pos']
@@ -334,6 +359,6 @@ def compute_metrics(y_true: pd.Series,
 
 # Public API
 __all__ = [
-    'SEED', 'PATHS', 'TFIDF_PARAMS', 'SPLIT_SIZES', 'PREDICTION_SCHEMA', 'TOP_K_VALUES', 'TUNING_BUDGETS', 'NN_FRAMEWORK', 'PLOT_STYLE',
-    'preprocess_text', 'load_splits', 'load_vectorizer', 'fit_and_save_vectorizer', 'load_features', 'compute_metrics'
+    'SEED', 'PATHS', 'TFIDF_PARAMS', 'SPLIT_SIZES', 'SPLIT_FINGERPRINTS', 'PREDICTION_SCHEMA', 'TOP_K_VALUES', 'TUNING_BUDGETS', 'NN_FRAMEWORK', 'PLOT_STYLE',
+    'preprocess_text', 'load_splits', 'load_vectorizer', 'fit_and_save_vectorizer', 'load_features', 'compute_metrics', 'fingerprint_texts'
 ]

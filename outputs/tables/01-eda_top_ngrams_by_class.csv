@@ -1,0 +1,81 @@
+class,ngram_type,rank,ngram,count
+negative,unigram,1,the,64736
+negative,unigram,2,and,29725
+negative,unigram,3,of,27605
+negative,unigram,4,to,27538
+negative,unigram,5,is,19756
+negative,unigram,6,it,19403
+negative,unigram,7,in,17362
+negative,unigram,8,this,16438
+negative,unigram,9,that,14970
+negative,unigram,10,was,10867
+negative,unigram,11,movie,9931
+negative,unigram,12,but,8843
+negative,unigram,13,for,8745
+negative,unigram,14,as,8282
+negative,unigram,15,with,8236
+negative,unigram,16,film,7909
+negative,unigram,17,you,6919
+negative,unigram,18,on,6908
+negative,unigram,19,not,6655
+negative,unigram,20,have,6124
+positive,unigram,1,the,68658
+positive,unigram,2,and,35225
+positive,unigram,3,of,30582
+positive,unigram,4,to,26267
+positive,unigram,5,is,22878
+positive,unigram,6,in,19766
+positive,unigram,7,it,19067
+positive,unigram,8,this,14013
+positive,unigram,9,that,13866
+positive,unigram,10,as,10574
+positive,unigram,11,with,9102
+positive,unigram,12,for,8936
+positive,unigram,13,was,8493
+positive,unigram,14,but,8265
+positive,unigram,15,film,8227
+positive,unigram,16,movie,7495
+positive,unigram,17,his,6741
+positive,unigram,18,on,6640
+positive,unigram,19,you,6552
+positive,unigram,20,he,6339
+negative,bigram,1,of the,7094
+negative,bigram,2,in the,4906
+negative,bigram,3,this movie,3532
+negative,bigram,4,to be,2772
+negative,bigram,5,the movie,2662
+negative,bigram,6,the film,2596
+negative,bigram,7,and the,2391
+negative,bigram,8,this film,2252
+negative,bigram,9,to the,2150
+negative,bigram,10,it was,1895
+negative,bigram,11,on the,1785
+negative,bigram,12,this is,1747
+negative,bigram,13,it is,1656
+negative,bigram,14,for the,1524
+negative,bigram,15,if you,1441
+negative,bigram,16,with the,1420
+negative,bigram,17,one of,1365
+negative,bigram,18,is the,1272
+negative,bigram,19,at the,1257
+negative,bigram,20,in this,1246
+positive,bigram,1,of the,8525
+positive,bigram,2,in the,5132
+positive,bigram,3,and the,2870
+positive,bigram,4,the film,2819
+positive,bigram,5,this movie,2632
+positive,bigram,6,to the,2562
+positive,bigram,7,it is,2444
+positive,bigram,8,this is,2172
+positive,bigram,9,this film,2097
+positive,bigram,10,the movie,2063
+positive,bigram,11,to be,2010
+positive,bigram,12,one of,1945
+positive,bigram,13,on the,1765
+positive,bigram,14,with the,1631
+positive,bigram,15,for the,1599
+positive,bigram,16,it was,1585
+positive,bigram,17,is the,1564
+positive,bigram,18,at the,1499
+positive,bigram,19,as the,1463
+positive,bigram,20,if you,1293

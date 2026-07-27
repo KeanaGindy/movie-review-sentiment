@@ -6,7 +6,7 @@ Committed results — the paper deliverables and the small cross-lane handoff fi
 |---|---|---|
 | `figures/` | Paper figures: EDA plots, ROC curves, confusion matrices, the head-to-head comparison, judge figures. | Yes |
 | `tables/` | Metrics comparison, LR top coefficients, top-k results, NN training history, adjudication + taxonomy tables. | Yes |
-| `predictions/` | Three small parquet files — `lr_val.parquet` and `nn_val.parquet` (from the model notebooks) and `test_predictions.parquet` (both models, long format with a `model` column, written by notebook 04 on the single final test run). The handoff between lanes. | Yes |
+| `predictions/` | Three small parquet files — `02-lr_val.parquet` and `03-nn_val.parquet` (from the model notebooks) and `04-test_predictions.parquet` (both models, long format with a `model` column, written by notebook 04 on the single final test run). The handoff between lanes. | Yes |
 
 ## Why predictions are committed
 
@@ -16,7 +16,7 @@ Committing the small prediction files is what lets the lanes work in parallel: t
 
 ## Prediction schema
 
-Every prediction parquet uses the same columns (`test_predictions.parquet` adds `model`):
+Every prediction parquet uses the same columns (`04-test_predictions.parquet` adds `model`):
 
 | Column | Meaning |
 |---|---|

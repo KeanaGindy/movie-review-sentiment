@@ -1,0 +1,4 @@
+split,negative,positive,total
+fit,5000,5000,10000
+val,2500,2500,5000
+test,12500,12500,25000

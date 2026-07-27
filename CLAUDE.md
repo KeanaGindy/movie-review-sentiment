@@ -10,7 +10,9 @@ It is a **3-person, 7-week course team project.** The design goal that shapes ev
 
 ## Current state
 
-`src/shared.py` and notebook `00_core` are **merged and live**: running 00 regenerates `data/processed/splits.parquet` and `artifacts/tfidf_vectorizer.joblib` in seconds. The remaining notebooks are built one at a time by their owners, so at any moment some exist and some do not.
+The first half of the pipeline is **merged and live** — `src/shared.py`, `00_core`, `01_eda`, and `02_logistic_regression`. Running 00 regenerates `data/processed/splits.parquet` and `artifacts/tfidf_vectorizer.joblib` in seconds; 01 and 02 then run against them and write their `outputs/`. The late-phase notebooks (`03_neural_network`, `04_evaluation`, `05_divergence_judge`) are still being built one at a time by their owners, so at any moment some exist and some do not.
+
+**Where that leaves a downstream lane:** `outputs/predictions/02-lr_val.parquet` exists, so 04 and 05 have one of the two prediction files they need. The other arrives with 03.
 
 **Check rather than assume** — this paragraph ages faster than the repo:
 
@@ -53,9 +55,9 @@ The build is a **linear pipeline of six notebooks that hand off artifacts on dis
 |---|---|---|---|
 | 00 | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`, `artifacts/tfidf_vectorizer.joblib` |
 | 01 | `eda` | `splits.parquet` | `outputs/figures/01-eda_*.png`, `outputs/tables/01-eda_*.csv` |
-| 02 | `logistic_regression` | `load_features("fit"/"val")` | `artifacts/logreg.joblib`, `outputs/predictions/lr_val.parquet`, LR coefficient + top-k tables |
-| 03 | `neural_network` | `load_features("fit"/"val")` | `artifacts/nn_model.keras`, `outputs/predictions/nn_val.parquet`, training history |
-| 04 | `evaluation` | val predictions + saved models; `load_features("test")` **on the final run only** | `outputs/predictions/test_predictions.parquet` (long, adds `model` col), metrics table, comparison figures |
+| 02 | `logistic_regression` | `load_features("fit"/"val")` | `artifacts/logreg.joblib`, `outputs/predictions/02-lr_val.parquet`, `outputs/tables/02-lr_*.csv` |
+| 03 | `neural_network` | `load_features("fit"/"val")` | `artifacts/nn_model.keras`, `outputs/predictions/03-nn_val.parquet`, `outputs/tables/03-nn_*.csv` |
+| 04 | `evaluation` | val predictions + saved models; `load_features("test")` **on the final run only** | `outputs/predictions/04-test_predictions.parquet` (long, adds `model` col), `outputs/tables/04-eval_*.csv`, `outputs/figures/04-eval_*.png` |
 | 05 | `divergence_judge` | prediction files + `splits.parquet` + `data/golden/` | `outputs/tables/05-judge_*.csv`, `outputs/figures/05-judge_*.png` |
 
 **Two canonical artifacts anchor everything:** `data/processed/splits.parquet` (`id, text, label, split∈{fit,val,test}`) and `artifacts/tfidf_vectorizer.joblib`. Feature matrices are **derived, never stored** — every notebook calls `shared.load_features(split)`, which loads both and transforms on the fly (seconds), so matrices can't go stale against the vectorizer.
@@ -93,7 +95,7 @@ It holds only settled, communal pieces: `SEED`, `PATHS` (never hard-code a path)
 - Every notebook: title/purpose + owner + its reads/writes line up top; imports (shared foundation first); the work; an explicit "write handoff artifacts" cell at the end.
 - **Kernel → Restart & Run All before committing**, so committed outputs match committed code. Notebooks must run clean top-to-bottom.
 - Relative paths only (via `PATHS` from `shared.py`). Clear noisy outputs before committing; keep the figures the paper references.
-- **Name outputs with the writing notebook's number:** `01-eda_*`, `05-judge_*`. The prefix makes `outputs/` sort in pipeline order and makes every file's owner obvious at a glance. Print a manifest of what the notebook wrote as its last cell.
+- **Everything written to `outputs/` carries its notebook's number** — `01-eda_*`, `02-lr_*`, `03-nn_*`, `04-eval_*`, `05-judge_*` — across `tables/`, `figures/`, and `predictions/` alike. `outputs/` then sorts in pipeline order and every file's producer is obvious. The canonical shared artifacts are **not** prefixed (`data/processed/splits.parquet`, `artifacts/tfidf_vectorizer.joblib`, `artifacts/logreg.joblib`, `artifacts/nn_model.keras`): they are loaded by name from every lane and belong to the pipeline, not to one notebook. Print a manifest of what the notebook wrote as its last cell.
 - **This is a public repo.** Never let an absolute path, a local username, or a stderr warning carrying either one into a committed output cell — print paths via `.relative_to(PATHS["repo_root"])`.
 - **Run the `notebook-reviewer` subagent before committing any notebook** (`.claude/agents/notebook-reviewer.md`) and clear its Blockers. It checks the invariants above, reproducibility, PEP 8, and — critical in a public repo — that no secret leaked into a cell or output.
 

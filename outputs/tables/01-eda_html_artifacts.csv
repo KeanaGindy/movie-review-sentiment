@@ -1,0 +1,6 @@
+artifact,reviews_containing,pct_of_fit
+<br /> line break,5816,58.2
+any <tag>,5817,58.2
+HTML entity (&...;),2,0.0
+non-ASCII characters,946,9.5
+<tag> surviving <br /> removal,2,0.0

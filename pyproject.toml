@@ -14,6 +14,7 @@ dependencies = [
     "joblib",
     "pyarrow",
     "python-dotenv",
+    "tensorflow>=2.21.0",
 ]
 
 # Deferred to build-time (added with `uv add` when the owning notebook is built):

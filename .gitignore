@@ -20,6 +20,15 @@ data/processed/*
 artifacts/*
 !artifacts/README.md
 
+# nn_model.keras is the one exception: TensorFlow's determinism guarantee
+# only holds on identical hardware/backend, and the tuned NN configs are
+# separated by less than the observed cross-machine noise — so which
+# architecture "wins" isn't reproducible from a re-run. Committing the
+# frozen model (~31 MB) means notebook 04 loads the exact network that
+# produced 03-nn_val.parquet instead of whatever a fresh 03 run happens
+# to select. Logged as a shared-foundation decision in docs/decisions.md.
+!artifacts/nn_model.keras
+
 # --- OS ---
 .DS_Store
 

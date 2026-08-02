@@ -19,11 +19,9 @@ dependencies = [
     "openai>=2.46.0",
 ]
 
-# Deferred to build-time (added with `uv add` when the owning notebook is built):
-#   tensorflow  -> notebook 03 (feed-forward neural network, Keras)
-# openai was added with notebook 05 (OpenAI-compatible LLM-as-judge client).
-# Kept out of the initial lockfile so the heaviest / most platform-fragile
-# dependencies do not land before the code that needs them.
+# The two heaviest deps were deferred to build-time and have both landed with
+# their owning notebooks: tensorflow with 03 (Keras NN), openai with 05
+# (OpenAI-compatible LLM-as-judge client).
 
 [dependency-groups]
 dev = [

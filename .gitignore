@@ -16,9 +16,14 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
-# --- Model artifacts (large / regenerable) — keep the README only ---
+# --- Model artifacts — regenerable ones are ignored. The TF-IDF vectorizer
+# and the trained NN are COMMITTED canonical artifacts: max_features
+# tie-breaking and NN training are not reproducible across machines
+# (docs/decisions.md), so their canonical bytes live in git.
 artifacts/*
 !artifacts/README.md
+!artifacts/tfidf_vectorizer.joblib
+!artifacts/nn_model.keras
 
 # nn_model.keras is the one exception: TensorFlow's determinism guarantee
 # only holds on identical hardware/backend, and the tuned NN configs are

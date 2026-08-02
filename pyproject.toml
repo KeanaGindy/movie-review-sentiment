@@ -26,6 +26,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel",
+    "ipywidgets>=8.1.8",
     "jupyterlab",
     "ruff",
 ]

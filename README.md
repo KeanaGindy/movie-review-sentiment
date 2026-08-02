@@ -108,7 +108,7 @@ movie-review-sentiment/
 ├── notebooks/     # the 6-step pipeline (00 core → 05 judge); see notebooks/README.md
 ├── src/           # shared.py — seed, paths, preprocessing params, metrics + plot helpers
 ├── data/          # raw + processed datasets (gitignored); provenance in data/README.md
-├── artifacts/     # fitted vectorizer + trained model weights (gitignored, regenerable)
+├── artifacts/     # vectorizer + NN committed as canon (not machine-reproducible); LR regenerable
 ├── outputs/       # figures, tables, predictions — committed (paper deliverables + handoff)
 ├── report/        # final APA 7 paper artifacts; drafting happens in Google Docs
 ├── docs/          # contribution log, AI-use disclosure, shared-foundation decisions

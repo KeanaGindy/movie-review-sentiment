@@ -1,11 +1,11 @@
 {
-  "name": "nn_256_64",
+  "name": "nn_128_32_stronger_reg",
   "hidden_units": [
-    256,
-    64
+    128,
+    32
   ],
-  "dropout": 0.4,
-  "l2": 0.0001,
-  "learning_rate": 0.001,
+  "dropout": 0.5,
+  "l2": 0.001,
+  "learning_rate": 0.0005,
   "batch_size": 128
 }

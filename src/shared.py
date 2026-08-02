@@ -12,9 +12,10 @@ This module provides the small, communal foundation used by the notebooks:
 Design notes:
 - The module locates the repository root relative to this file (parents[1]) so notebooks
   can import it from src/ regardless of working directory.
-- TF-IDF is expected to be fitted and saved by notebook 00 at PATHS['tfidf'].
-  load_features will refuse to fit a new vectorizer automatically; fitting must be
-  performed by notebook 00 to preserve the invariants documented in the repo.
+- The fitted TF-IDF vectorizer is a committed canonical artifact at PATHS['tfidf'],
+  verified against VECTORIZER_FINGERPRINTS on every load. load_features will refuse
+  to fit a new vectorizer automatically; notebook 00 verifies the committed artifact
+  (and refits + checks against canon only if the file is missing).
 
 API examples:
 >>> from shared import SEED, PATHS, load_features, compute_metrics
@@ -71,8 +72,8 @@ SPLIT_SIZES: Dict[str, int] = {
     'test': 25_000,
 }
 
-# Expected split fingerprints, recorded when notebook 00 was ratified. The
-# artifacts are gitignored and each machine regenerates them, while ids are
+# Expected split fingerprints, recorded when notebook 00 was ratified.
+# splits.parquet is gitignored and each machine regenerates it, while ids are
 # positional (fit-000123), so two machines producing different samples would
 # still produce colliding ids that point at different reviews. Notebook 00
 # asserts against these so that divergence is loud instead of silent.
@@ -80,6 +81,19 @@ SPLIT_FINGERPRINTS: Dict[str, str] = {
     'fit': 'a119c174af55823c',
     'val': 'f10ba2466b84170b',
     'test': '56278a6aa6fbfb16',
+}
+
+# The fitted TF-IDF vectorizer is a COMMITTED canonical artifact, not a
+# regenerable one: sklearn's max_features cutoff breaks total-count ties with
+# an unstable sort, and the tie region is wide on this corpus (997 terms tie
+# at the cutoff for 721 slots), so two environments can legitimately fit
+# different 20,000-term vocabularies from byte-identical texts. A 197-term
+# divergence measured across team machines shifted feature columns enough to
+# collapse a transferred model from 0.90 to 0.63 accuracy. load_vectorizer()
+# verifies against these fingerprints on every load. See docs/decisions.md.
+VECTORIZER_FINGERPRINTS: Dict[str, str] = {
+    'vocabulary': '80562d8ff9c3ba88',
+    'idf': 'a79cd1c524aa165b',
 }
 
 
@@ -93,6 +107,24 @@ def fingerprint_texts(texts: Iterable[str]) -> str:
     for t in texts:
         h.update(str(t).encode('utf-8'))
     return h.hexdigest()[:16]
+
+
+def fingerprint_vectorizer(vec: TfidfVectorizer) -> Dict[str, str]:
+    """Digest of a fitted vectorizer's vocabulary and IDF weights (16 hex each).
+
+    The vocabulary hash is order-sensitive by design: feature columns are
+    positional, so a same-set, different-order vocabulary would silently remap
+    every column a trained model reads.
+
+    The space-join is ambiguous for bigram terms (they contain spaces); the
+    paired IDF hash disambiguates, so a silent collision would need both
+    digests to collide at once.
+    """
+    vocab = vec.get_feature_names_out()
+    return {
+        'vocabulary': hashlib.sha256(' '.join(vocab).encode('utf-8')).hexdigest()[:16],
+        'idf': hashlib.sha256(np.round(vec.idf_, 10).tobytes()).hexdigest()[:16],
+    }
 
 
 # Prediction schema used across the pipeline
@@ -167,20 +199,36 @@ def load_splits() -> pd.DataFrame:
     return df
 
 
-def load_vectorizer() -> TfidfVectorizer:
+def load_vectorizer(verify: bool = True) -> TfidfVectorizer:
     """Load the saved TF-IDF vectorizer from artifacts.
 
-    The project invariant is that the TF-IDF is FIT on the 'fit' split only
-    and then saved by notebook 00. This function will raise if the artifact
-    is missing so callers do not silently fit on val/test data.
+    The project invariant is that the TF-IDF is FIT on the 'fit' split only.
+    The fitted artifact is COMMITTED as canonical bytes (it is not reliably
+    regenerable: max_features tie-breaking differs across environments), so
+    every load verifies it against VECTORIZER_FINGERPRINTS and raises if a
+    divergent local copy would silently shift feature columns. Pass
+    verify=False only for forensic work on a known-divergent artifact.
     """
     tfidf_path = PATHS['tfidf']
     if not tfidf_path.exists():
         raise FileNotFoundError(
-            f"TF-IDF vectorizer not found at {tfidf_path!s}. "
-            "Notebook 00 must fit & save the vectorizer before calling load_features()."
+            f"TF-IDF vectorizer not found at {tfidf_path!s}. It is a committed "
+            "artifact - restore it with `git checkout -- artifacts/tfidf_vectorizer.joblib`."
         )
     vec = joblib.load(tfidf_path)
+    if verify:
+        fp = fingerprint_vectorizer(vec)
+        if fp != VECTORIZER_FINGERPRINTS:
+            raise RuntimeError(
+                "The local TF-IDF artifact does not match the ratified canonical fingerprints.\n"
+                f"  got:      {fp}\n"
+                f"  expected: {VECTORIZER_FINGERPRINTS}\n"
+                "Feature columns from this artifact will not line up with the committed "
+                "models and predictions (this machine breaks max_features frequency ties "
+                "differently). Restore the canonical artifact:\n"
+                "  git checkout -- artifacts/tfidf_vectorizer.joblib\n"
+                "Re-ratifying a new canon is a team decision - see docs/decisions.md."
+            )
     return vec
 
 
@@ -359,6 +407,6 @@ def compute_metrics(y_true: pd.Series,
 
 # Public API
 __all__ = [
-    'SEED', 'PATHS', 'TFIDF_PARAMS', 'SPLIT_SIZES', 'SPLIT_FINGERPRINTS', 'PREDICTION_SCHEMA', 'TOP_K_VALUES', 'TUNING_BUDGETS', 'NN_FRAMEWORK', 'PLOT_STYLE',
-    'preprocess_text', 'load_splits', 'load_vectorizer', 'fit_and_save_vectorizer', 'load_features', 'compute_metrics', 'fingerprint_texts'
+    'SEED', 'PATHS', 'TFIDF_PARAMS', 'SPLIT_SIZES', 'SPLIT_FINGERPRINTS', 'VECTORIZER_FINGERPRINTS', 'PREDICTION_SCHEMA', 'TOP_K_VALUES', 'TUNING_BUDGETS', 'NN_FRAMEWORK', 'PLOT_STYLE',
+    'preprocess_text', 'load_splits', 'load_vectorizer', 'fit_and_save_vectorizer', 'load_features', 'compute_metrics', 'fingerprint_texts', 'fingerprint_vectorizer'
 ]

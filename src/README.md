@@ -4,12 +4,12 @@ One small module, **`shared.py`**, holding the plumbing every lane must agree on
 
 Contents (values and rationale live in [`../docs/decisions.md`](../docs/decisions.md) — not duplicated here):
 
-- **Constants:** `SEED`, `PATHS` (so no notebook hard-codes a path), plus the agreed `TFIDF_PARAMS`, `SPLIT_SIZES`, `PREDICTION_SCHEMA`, `TOP_K_VALUES`, and `TUNING_BUDGETS`.
+- **Constants:** `SEED`, `PATHS` (so no notebook hard-codes a path), plus the agreed `TFIDF_PARAMS`, `SPLIT_SIZES`, `PREDICTION_SCHEMA`, `TOP_K_VALUES`, `TUNING_BUDGETS`, and the ratified `SPLIT_FINGERPRINTS` / `VECTORIZER_FINGERPRINTS` that make cross-machine drift loud.
 - **`preprocess_text(text)`** — the one cleaning step: strip `<br />`, collapse whitespace, lowercase. Both the vectorizer fit and every `load_features` call route through it, so training and inference cannot drift apart.
 - **`load_splits()`** — reads `splits.parquet`, with a clear error if notebook 00 has not been run.
 - **`load_features(split, return_texts=False, allow_test=False)`** — loads `splits.parquet` + the fitted vectorizer and returns `X, y, ids`. Matrices are derived on the fly (seconds), never stored, so they can't go stale against the vectorizer.
   - **It refuses the test split by default**, raising `PermissionError` unless you pass `allow_test=True`. This is how the "test set is touched exactly once, in notebook 04" rule becomes a hard error instead of a convention. If you are not writing 04's final scoring cell and you hit this, the guard is working — do not pass the flag to make it go away.
-- **`load_vectorizer()` / `fit_and_save_vectorizer(...)`** — load the fitted artifact, or (re)create it. Fitting is notebook 00's job; the helper refuses to overwrite an existing artifact unless told to.
+- **`load_vectorizer()` / `fit_and_save_vectorizer(...)`** — load the fitted artifact, or (re)create it. The artifact is **committed** canon: `load_vectorizer()` verifies its vocabulary + IDF hashes against `VECTORIZER_FINGERPRINTS` and raises if a local copy diverged (sklearn's `max_features` tie-break is environment-sensitive, so a silent refit would shift every feature column). Fitting is notebook 00's job — and 00 only refits if the file is missing; the helper refuses to overwrite an existing artifact unless told to.
 - **`compute_metrics(y_true, y_pred, y_proba_pos)`** — accuracy, precision, recall, F1, ROC-AUC, confusion matrix. The **one** metrics function every lane calls, so results are computed identically.
 - **`PLOT_STYLE`**, a small matplotlib `rcParams` dict so figures look consistent. Notebooks may layer their own local overrides on top. Plot *functions* stay in the notebooks that draw them — each figure is produced in exactly one place.
 

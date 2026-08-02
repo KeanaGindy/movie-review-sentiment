@@ -28,13 +28,13 @@ Ownership is a deliberate 2/2/2 split that pairs one **early-phase** deliverable
 
 ## Handoff contract
 
-Two canonical artifacts anchor everything: **`data/processed/splits.parquet`** (`id, text, label, split∈{fit,val,test}`, plus `source_split, source_index` recording each row's Hugging Face origin) and **`artifacts/tfidf_vectorizer.joblib`** (fit on the `fit` split only). Feature matrices are *derived*, never stored: every notebook calls `shared.load_features(split)`, which loads both artifacts and transforms on the fly (seconds), so matrices can never go stale against the vectorizer.
+Two canonical artifacts anchor everything: **`data/processed/splits.parquet`** (`id, text, label, split∈{fit,val,test}`, plus `source_split, source_index` recording each row's Hugging Face origin) and **`artifacts/tfidf_vectorizer.joblib`** (fit on the `fit` split only, and **committed** — sklearn's `max_features` tie-break is environment-sensitive, so the canonical bytes live in git and every load verifies them against `VECTORIZER_FINGERPRINTS`; see `docs/decisions.md`). Feature matrices are *derived*, never stored: every notebook calls `shared.load_features(split)`, which loads both artifacts and transforms on the fly (seconds), so matrices can never go stale against the vectorizer.
 
 **Predictions are the interface between lanes.** Every prediction file uses one schema — **`id, y_true, y_pred, y_proba_pos`** — and joins back to review text on `id`. Anything downstream (metrics, figures, disagreements) is derived from predictions plus `splits.parquet`.
 
 | # | Notebook | Reads | Writes |
 |---|---|---|---|
-| **00** | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`<br>`artifacts/tfidf_vectorizer.joblib` |
+| **00** | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`<br>`artifacts/tfidf_vectorizer.joblib` (committed; verified, refit only if missing) |
 | **01** | `eda` | `splits.parquet` | `outputs/figures/01-eda_*.png`<br>`outputs/tables/01-eda_*.csv` |
 | **02** | `logistic_regression` | `load_features("fit")`, `load_features("val")` | `artifacts/logreg.joblib`<br>`outputs/predictions/02-lr_val.parquet`<br>`outputs/tables/02-lr_top_coefficients.csv`<br>`outputs/tables/02-lr_topk_results.csv` (k = 50/100/500) |
 | **03** | `neural_network` | `load_features("fit")`, `load_features("val")` | `artifacts/nn_model.keras`<br>`outputs/predictions/03-nn_val.parquet`<br>`outputs/tables/03-nn_training_history.csv` |

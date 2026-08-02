@@ -19,6 +19,9 @@ One row per use: date, member, tool + model, what it did, and how the output was
 
 | 2026-07-31 | Keana Gindlesperger | Claude (Claude Sonnet 5, claude.ai) | Asked Claude to review notebook 03 (neural network) for code quality, comment clarity, and any improvements. It flagged a real defect — a local absolute path and Windows username leaking into two committed output cells (the freeze/save manifest print and a stray TensorFlow warning in the tuning-loop cell) — and fixed the save-manifest prints to use `PATHS["repo_root"].relative_to()`, matching the convention notebook 00 already follows. No model architecture, tuning grid, or metrics logic was touched. | Diffed the notebook JSON before/after line by line to confirm only the flagged path-leak lines changed. Notebook restarted and re-run top-to-bottom to regenerate clean outputs before commit. |
 
+| 2026-07-31 | Yesid Cardenas Marin | Gemini  | Assisted notebook 02 Logistic Regression with a guided feature matrix inspection, baseline Logistic Regression model setup, evaluation metric computation, and standardization of prediction artifact exports (`02-lr_val.parquet`).. Successfully implemented Notebook 02 pipeline, saved trained model artifact (`logreg.joblib`), and ensured validation reproducibility across environment runs. |
+| 2026-08-02 | Yesid Cardenas Marin | Gemini  | Assisted notebook 04 Evaluation with resolving evaluation code errors, configuring visualization labels (`["Negative", "Positive"]`), implementing model reproduction sanity assertions (`assert np.allclose`). Successfully created, updated, and verified PR #9 with full test evaluation metrics, figures, and handoff artifacts. |
+
 ## For the paper
 
 The disclosure statement summarizes this log. Cite each AI tool in APA 7 (e.g., the LLM-judge model and any drafting/coding assistant). Keep model names and versions accurate — `[VERIFY]` anything uncertain before submission.

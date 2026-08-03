@@ -1,6 +1,6 @@
 # Disagreement Tagging Protocol
 
-Annotation guideline for categorizing LR-vs-NN disagreement reviews by difficulty type. Written before contact with the real disagreement set (pre-registered); piloted on the golden set and stub disagreements before use. Author: Ian Schmitt. **Status: v1.1 — decisions 1–4 ratified (Ian, 2026-07-20); pilot run and adjudicated 2026-07-22. Amendments from the pilot: the inversion test for `sarcasm`, whole-review carriage for `negation`, the concession rule for `mixed`, and the `noise` anchor retired. Blind pilot tags (`tag`) and adjudicated finals (`tag_final`) both preserved in `data/golden/pilot-tags-golden.csv`.**
+Annotation guideline for categorizing LR-vs-NN disagreement reviews by difficulty type. Written before contact with the real disagreement set (pre-registered); piloted on the golden set and stub disagreements before use. Author: Ian Schmitt. **Status: v1.2 — decisions 1–4 ratified (Ian, 2026-07-20); pilot run and adjudicated 2026-07-22. Amendments from the pilot: the inversion test for `sarcasm`, whole-review carriage for `negation`, the concession rule for `mixed`, and the `noise` anchor retired. Blind pilot tags (`tag`) and adjudicated finals (`tag_final`) both preserved in `data/golden/pilot-tags-golden.csv`. v1.2 (2026-08-02) adds the LLM tag pass — see Amendments.**
 
 ## Ratified decisions
 
@@ -53,5 +53,14 @@ Pilot inputs differ in two honest ways: the pilot runs on the golden set (which 
 ## Outputs
 
 `tag` (+ optional `tag_alt`) columns joined to the disagreement rows → the taxonomy distribution table, per-category LR/NN win rates, and the judge-accuracy-by-category figure. Protocol text becomes a paper appendix; deviations discovered during the pilot amend this document, with the change noted, before the real run.
+
+## Amendments
+
+**v1.2 (2026-08-02) — LLM-assisted tagging for full-coverage taxonomy.** Adopted mid-way through the val human session (~20/50 tagged) and **before any test tagging**, under schedule pressure and for fuller coverage. The change, in full:
+
+1. A **separate LLM tagging pass** (same endpoint and blinding as the judge; a distinct prompt implementing this protocol's decision rules; temperature 0; schema-forced five-way choice) tags **all** disagreement rows on both splits — 109 val, 693 test. It never regenerates verdicts: the frozen judge run and the pre-registered headline are untouched, and tags have no path into the primary outcome in any case.
+2. The **human val sample continues under v1.1 unchanged** (cold, anchor-free) and doubles as the reference for human–LLM agreement: raw agreement, Cohen's κ, and the annotator confusion matrix, reported in notebook 05.
+3. The **test seeded-50 is human-verified rather than cold-tagged**: the tagger sees the LLM's proposed tag and confirms or overrides (`scripts/tag_disagreements.py test verify`). The anchoring this introduces is disclosed, not hidden.
+4. **Reporting:** the human(-verified) 50-review samples remain the primary taxonomy; the LLM-tagged full sets are the secondary, full-coverage readout, qualified by the measured agreement. Known limitation, carried to the paper: the tagger LLM is the same model family as the judge, so judge-accuracy-by-category on LLM tags has a circularity risk — mitigated by the blind separate pass, the different question asked, and the human reference.
 
 **Pre-registered baseline for the judge (recorded 2026-07-24, before any prediction file existed).** On a disagreement set exactly one of the two models is correct on every row, so their accuracies sum to 100% there. The judge is therefore measured against *"always side with the better model"* — `max(acc_LR, acc_NN)` on that same set — not against a coin flip. It earns its place in the paper only by beating that number, and the outcome is reported either way. Full reasoning in [`judge-dev-log.md`](judge-dev-log.md) under 2026-07-24.

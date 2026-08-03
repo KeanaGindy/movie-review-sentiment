@@ -8,11 +8,15 @@ discipline. Tags checkpoint one row at a time; quit with q and re-run to
 resume. Per-review reading time is recorded for the dev-log session entry.
 
 Usage (from the repo root):
-    uv run python scripts/tag_disagreements.py val     # val disagreement sample
-    uv run python scripts/tag_disagreements.py test    # test sample, after 04 merges
+    uv run python scripts/tag_disagreements.py val          # cold tagging (protocol v1.1)
+    uv run python scripts/tag_disagreements.py test verify  # verify LLM tags (v1.2)
+
+Verify mode (protocol v1.2): shows the LLM pass's proposed tag next to the
+text; Enter confirms it, a tag key overrides. The anchoring this introduces
+is disclosed in the protocol's amendment - cold mode stays the default.
 
 Output: outputs/tables/05-judge_<split>_tags.csv
-    order, id, tag, tag_alt, note, seconds   (no text - it rejoins on id)
+    order, id, tag, tag_alt, note, seconds [, llm_tag]  (no text - rejoins on id)
 """
 import pathlib
 import re
@@ -70,15 +74,24 @@ def show(text):
 def main():
     split = sys.argv[1] if len(sys.argv) > 1 else "val"
     if split not in {"val", "test"}:
-        sys.exit("usage: tag_disagreements.py [val|test]")
+        sys.exit("usage: tag_disagreements.py [val|test] [verify]")
+    verify = len(sys.argv) > 2 and sys.argv[2] == "verify"
     out = TBL / f"05-judge_{split}_tags.csv"
     sample = blind_sample(split)
 
-    columns = ["order", "id", "tag", "tag_alt", "note", "seconds"]
+    llm = None
+    if verify:
+        llm_csv = TBL / f"05-judge_{split}_llm_tags.csv"
+        if not llm_csv.exists():
+            sys.exit(f"verify mode needs {llm_csv.name} - run notebook 05's tag pass first")
+        llm = pd.read_csv(llm_csv).set_index("id")["llm_tag"]
+
+    columns = ["order", "id", "tag", "tag_alt", "note", "seconds", "llm_tag"]
     done = pd.read_csv(out) if out.exists() else pd.DataFrame(columns=columns)
     todo = sample[~sample["id"].isin(done["id"])]
 
-    print(f"\n{split} sample: {len(sample)} reviews | {len(done)} tagged, {len(todo)} to go")
+    mode = "VERIFY (Enter confirms the proposed tag)" if verify else "cold (protocol v1.1)"
+    print(f"\n{split} sample: {len(sample)} reviews | {len(done)} tagged, {len(todo)} to go | mode: {mode}")
     print("Precedence: noise > sarcasm > negation > mixed > other. Read the WHOLE review.")
     print("[n]egation [s]arcasm [m]ixed [x] noise [o]ther | u undo previous | q quit\n")
 
@@ -89,9 +102,13 @@ def main():
         print(f"[{len(done) + 1}/{len(sample)}]  id {row.id}\n")
         show(row.text)
         print()
+        proposed = llm.get(row.id, "") if verify else ""
+        prompt = f"tag [Enter = {proposed}]> " if proposed else "tag> "
         t0 = time.monotonic()
         while True:
-            choice = input("tag> ").strip().lower()
+            choice = input(prompt).strip().lower()
+            if verify and choice == "" and proposed:
+                choice = {v: k for k, v in TAGS.items()}[proposed]
             if choice == "q":
                 done.to_csv(out, index=False)
                 print(f"saved {len(done)} tags -> {out.relative_to(PATHS['repo_root'])}")
@@ -119,6 +136,7 @@ def main():
                 "tag_alt": TAGS.get(alt, ""),
                 "note": note,
                 "seconds": seconds,
+                "llm_tag": proposed,
             }])],
             ignore_index=True,
         )

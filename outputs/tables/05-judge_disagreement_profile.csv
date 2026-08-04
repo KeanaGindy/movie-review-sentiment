@@ -1,4 +1,4 @@
-comparison,metric,median_disagree,median_agree,mannwhitney_p
+comparison,metric,median_a,median_b,mannwhitney_p
 disagree_vs_agree,margin_lr,0.03887840301526968,0.41203556949779974,0.0
 disagree_vs_agree,margin_nn,0.03915897011756897,0.39079999923706055,0.0
 disagree_vs_agree,words,168.0,171.0,0.6583047179266373

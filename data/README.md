@@ -9,7 +9,6 @@ Datasets and derived data artifacts. `data/raw/` and `data/processed/` are **git
 | `raw/` | The dataset as downloaded (Hugging Face cache / exported copy). Never edited by hand. Gitignored. | 00 (download) |
 | `processed/splits.parquet` | Canonical split table: `id, text, label, split∈{fit,val,test}`. The join source for all downstream text and labels. Gitignored. | 00 |
 | `golden/golden_set.csv` | Hand-curated 32-review calibration set for the LLM judge (train-split sourced, stratified by difficulty category). Committed. | T3, by hand |
-| `golden/pilot-tags-golden.csv` | Blinded tagging sheet for the tagging-protocol pilot (`docs/tagging-protocol.md`). Committed. | T3, by hand |
 
 Feature matrices are **not stored** — every notebook derives them on the fly from `splits.parquet` + the fitted vectorizer via `shared.load_features(split)`, so they can never go stale.
 

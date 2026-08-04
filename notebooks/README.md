@@ -2,14 +2,14 @@
 
 The project is built as a **linear sequence of notebooks that hand off artifacts on disk.** Each notebook reads the previous step's saved outputs and writes the inputs for the next. The files on disk are the contract between people — nothing is passed in memory. Run them **in order, 00 → 05.**
 
-**00, 01, and 02 are merged**; 03, 04, and 05 are still being built one at a time by their owners — run `ls` here and `gh pr list` for the live picture. This README is the spec each notebook implements, and it stays the contract whether or not the file exists yet.
+**All six notebooks are built and the pipeline is complete** — the single final test run has happened (04), and 05's adjudication is done on both splits with every LLM call checkpointed. This README is the spec each notebook implements.
 
 **Output naming:** everything written to `outputs/` carries its notebook's number — `01-eda_*`, `02-lr_*`, `03-nn_*`, `04-eval_*`, `05-judge_*` — in `tables/`, `figures/`, and `predictions/` alike, so `outputs/` sorts in pipeline order and every file's producer is obvious. The canonical shared artifacts (`data/processed/splits.parquet`, `artifacts/*.joblib`, `artifacts/*.keras`) are **not** prefixed: every lane loads them by name and they belong to the pipeline rather than to one notebook.
 
 ## Why it is built this way
 
 - **Parallel work.** A downstream lane loads the saved artifacts of an upstream lane instead of rerunning its expensive steps. Three people move at once.
-- **Reproducibility.** From a clean clone, running 00 → 05 regenerates every figure and number the paper reports.
+- **Reproducibility.** From a clean clone, running 00 → 05 regenerates every figure and number the paper reports. The committed canonical artifacts are *verified*, not refit: 00 checks the vectorizer against `VECTORIZER_FINGERPRINTS`, and a re-run of 03 demonstrates training but writes a machine-local model — restore the committed artifacts before 04 if git shows them modified. 05's verdicts replay from committed checkpoints at zero API cost.
 - **The fairness rules become structural.** TF-IDF is fit once (in 00) and saved, so there is no leakage. The model notebooks (02, 03) only ever see the `fit` and `val` splits — **all test-set scoring lives in notebook 04**, so the plan's "single final test run, both models, one script" is enforced by the structure, not by calendar discipline.
 - **Legible contribution.** Each owner's commits land in their own notebook.
 
@@ -37,7 +37,7 @@ Two canonical artifacts anchor everything: **`data/processed/splits.parquet`** (
 | **00** | `core` | `stanfordnlp/imdb` (Hugging Face) | `data/processed/splits.parquet`<br>`artifacts/tfidf_vectorizer.joblib` (committed; verified, refit only if missing) |
 | **01** | `eda` | `splits.parquet` | `outputs/figures/01-eda_*.png`<br>`outputs/tables/01-eda_*.csv` |
 | **02** | `logistic_regression` | `load_features("fit")`, `load_features("val")` | `artifacts/logreg.joblib`<br>`outputs/predictions/02-lr_val.parquet`<br>`outputs/tables/02-lr_top_coefficients.csv`<br>`outputs/tables/02-lr_topk_results.csv` (k = 50/100/500) |
-| **03** | `neural_network` | `load_features("fit")`, `load_features("val")` | `artifacts/nn_model.keras`<br>`outputs/predictions/03-nn_val.parquet`<br>`outputs/tables/03-nn_training_history.csv` |
+| **03** | `neural_network` | `load_features("fit")`, `load_features("val")` | `artifacts/nn_model.keras` (committed)<br>`outputs/predictions/03-nn_val.parquet`<br>`outputs/tables/03-nn_training_history.csv`<br>`outputs/tables/03-nn_tuning_results.csv`<br>`outputs/tables/03-nn_best_config.json`<br>`outputs/figures/03-nn_{training_curves,config_comparison}.png` |
 | **04** | `evaluation` | val predictions; saved models; `load_features("test")` **on the final run only** | `outputs/predictions/04-test_predictions.parquet` (long format: adds a `model` column)<br>`outputs/tables/04-eval_metrics_comparison.csv`<br>`outputs/figures/04-eval_{roc,confusion,comparison}_*.png` |
 | **05** | `divergence_judge` | prediction files + `splits.parquet` (for text) + `data/golden/golden_set.csv` | `outputs/tables/05-judge_*.csv`<br>`outputs/figures/05-judge_*.png` |
 

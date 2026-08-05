@@ -95,7 +95,7 @@ flowchart LR
 | 02 | `logistic_regression` | T2 | fit + val features | LR model, val predictions, coefficients, top-k results |
 | 03 | `neural_network` | T1 | fit + val features | NN model, val predictions, training history |
 | 04 | `evaluation` | T2 | val predictions + saved models; test features on the final run only | test predictions (both models, one file), metrics table, comparison figures |
-| 05 | `divergence_judge` | T3 | predictions + splits (derives the disagreement set) + the hand-curated golden set | hard-case taxonomy, LLM adjudication table |
+| 05 | `divergence_judge` | T3 | predictions + splits (derives the disagreement set) + the hand-curated golden set | adjudication verdicts, judge-vs-baseline scoring, disagreement profile |
 
 Ownership is a 2/2/2 split: every member has one early-phase notebook (00/01/02) and one late-phase notebook (03/04/05), so contribution runs through the whole build. Lanes, calendar, and the report/presentation split live in [`docs/workload-plan.md`](docs/workload-plan.md).
 
@@ -133,7 +133,7 @@ cd movie-review-sentiment
 uv sync                 # creates .venv and installs pinned dependencies
 ```
 
-Then run the notebooks **in order, 00 → 05**. From a clean clone, the pipeline regenerates every figure and number in the paper. The test set is touched exactly once, on the final run.
+Then run the notebooks **in order, 00 → 05**. From a clean clone, the pipeline regenerates every figure and number in the paper. Two notes: the canonical artifacts (`tfidf_vectorizer.joblib`, `nn_model.keras`) are committed and *verified* rather than refit — a re-run of 03 demonstrates training but writes a machine-local model, so restore the committed artifacts (`git checkout -- artifacts/ outputs/predictions/03-nn_val.parquet outputs/tables/03-nn_*.csv outputs/figures/03-nn_*.png`) before running 04 if git shows them modified. Notebook 05's LLM verdicts are checkpointed in `outputs/tables/`, so it replays at zero API cost; a live endpoint (`.env`) is needed only to adjudicate from scratch. The test set is touched exactly once, on the final run.
 
 ## Scope fence (explicitly not doing)
 

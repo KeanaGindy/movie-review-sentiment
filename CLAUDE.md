@@ -10,9 +10,7 @@ It is a **3-person, 7-week course team project.** The design goal that shapes ev
 
 ## Current state
 
-The first half of the pipeline is **merged and live** — `src/shared.py`, `00_core`, `01_eda`, and `02_logistic_regression`. Running 00 regenerates `data/processed/splits.parquet` and `artifacts/tfidf_vectorizer.joblib` in seconds; 01 and 02 then run against them and write their `outputs/`. The late-phase notebooks (`03_neural_network`, `04_evaluation`, `05_divergence_judge`) are still being built one at a time by their owners, so at any moment some exist and some do not.
-
-**Where that leaves a downstream lane:** `outputs/predictions/02-lr_val.parquet` exists, so 04 and 05 have one of the two prediction files they need. The other arrives with 03.
+The pipeline is **complete**: all six notebooks exist, the single final test run has happened (notebook 04), and notebook 05's adjudication is done on both splits with every LLM call checkpointed. Running 00 regenerates `data/processed/splits.parquet` in seconds and verifies the committed vectorizer; every other notebook runs against committed artifacts. The headline result: on the 693 test reviews where the two models disagree, the frozen LLM judge scored 92.8% against a pre-registered 58.7% baseline (exact McNemar p = 1.0e-48).
 
 **Check rather than assume** — this paragraph ages faster than the repo:
 
@@ -36,10 +34,7 @@ uv run ruff format .       # format (line-length 88)
 uv run <script.py>         # run any script; never bare `python`
 ```
 
-**Deferred dependencies.** Two heavy/platform-fragile deps are deliberately *not* in the initial lockfile. Add each with `uv add` only when building the notebook that needs it, then commit the updated `pyproject.toml` + `uv.lock` so teammates pick it up on the next `uv sync`:
-
-- `uv add tensorflow` — notebook 03 (Keras feed-forward NN). Apple Silicon runs CPU/Metal. If a machine can't install TF, sklearn's `MLPClassifier` is the documented fallback — record the substitution in `docs/decisions.md`.
-- `uv add openai` — notebook 05 (OpenAI-compatible LLM-judge client).
+**Dependencies are settled.** The heavy deps that were deferred to build-time have all landed with their owning notebooks and live in the lockfile: `tensorflow` (03, Keras feed-forward NN; Apple Silicon runs CPU/Metal), `seaborn` (04, evaluation figures), `openai` (05, the OpenAI-compatible LLM-judge client). One `uv sync` installs everything.
 
 The LLM judge reads `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` from a gitignored `.env` (`cp .env.example .env`). The same code targets a local server (llama.cpp/LM Studio/Ollama) or a cloud endpoint — only those three vars change. Never commit a real key.
 
